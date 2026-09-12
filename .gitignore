@@ -1,0 +1,25 @@
+# Secrets / local environment
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Runtime logs and local Kubernetes data
+logs/*
+!logs/.gitkeep
+k8s/mysql-data/
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+
+# Jenkins local data
+jenkins/jenkins_home/
+
+# OS/editor
+.DS_Store
+.vscode/
+.idea/

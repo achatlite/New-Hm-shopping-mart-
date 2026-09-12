@@ -1,0 +1,860 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>My Orders</title>
+  <link rel="stylesheet" href="/style.css">
+
+  <style>
+    .order-card {
+      margin-bottom: 18px;
+    }
+
+    .order-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+
+    .return-box {
+      display: none;
+      margin-top: 15px;
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      background: #fafafa;
+    }
+
+    .return-box.show {
+      display: block;
+    }
+
+    .return-box label {
+      display: block;
+      margin: 8px 0 5px;
+      font-weight: 600;
+    }
+
+    .return-box input,
+    .return-box textarea,
+    .return-box select {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 7px;
+      margin-bottom: 8px;
+    }
+
+    .items-box {
+      display: none;
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 10px;
+      background: #f5f5f5;
+    }
+
+    .items-box.show {
+      display: block;
+    }
+
+    .item-row {
+      padding: 10px 0;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .item-row:last-child {
+      border-bottom: 0;
+    }
+
+    .status {
+      display: inline-block;
+      padding: 4px 9px;
+      border-radius: 20px;
+      background: #eee;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .message {
+      margin-top: 10px;
+      font-weight: 600;
+    }
+
+    .success {
+      color: green;
+    }
+
+    .error {
+      color: #c00;
+    }
+  </style>
+
+<style>
+.tracking-panel{margin-top:12px}.tracking-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin:12px 0 18px}.tracking-summary div{padding:12px;border:1px solid #e5e7eb;border-radius:10px;background:#fafafa}.tracking-summary span,.customer-event span,.customer-event small{display:block;color:#666;font-size:12px;margin-bottom:4px}.customer-timeline{border-left:3px solid #ddd;margin:14px 0 4px;padding-left:22px}.customer-event{position:relative;padding:0 0 18px}.customer-event .dot{position:absolute;left:-29px;top:3px;width:10px;height:10px;border-radius:50%;background:#aaa}.customer-event.current .dot{background:#111}.customer-event b{display:block}.customer-event small{margin-top:4px}.muted{color:#666;font-size:13px}
+</style>
+</head>
+
+<body>
+
+<main class="wrap">
+
+  <button class="secondary backbtn" onclick="history.back()">
+    ← Back
+  </button>
+
+  <h1>My Orders</h1>
+
+  <div id="o" class="orders">
+    Loading...
+  </div>
+
+</main>
+
+<script>
+
+const user = JSON.parse(
+  localStorage.getItem('hm_user') || 'null'
+);
+
+const ordersBox = document.getElementById('o');
+
+
+if (!user) {
+
+  location.href = '/login.html';
+
+} else {
+
+  loadOrders();
+
+}
+
+
+
+async function trackOrder(id) {
+  const box=document.getElementById('track-'+id);
+  if(box.classList.contains('show')) { box.classList.remove('show'); return; }
+  box.innerHTML='<div class="card">Loading live delivery tracking...</div>'; box.classList.add('show');
+  try {
+    const r=await fetch('/api/orders/'+encodeURIComponent(user.id)+'/'+encodeURIComponent(id)+'/shipment');
+    const d=await r.json();
+    if(!r.ok) throw Error(d.detail||'Tracking information is not available yet.');
+    const eta=d.estimated_delivery ? new Date(String(d.estimated_delivery).replace(' ','T')+'Z').toLocaleString('en-IN') : 'Not updated yet';
+    const labels={pending:'Order received',packed:'Packed',shipped:'Shipped',out_for_delivery:'Out for delivery',delivered:'Delivered',returned:'Returned'};
+    const events=Array.isArray(d.events)?d.events:[];
+    box.innerHTML='<div class="card tracking-panel"><h3>🚚 Delivery tracking</h3><div class="tracking-summary"><div><span>Current status</span><b>'+escapeHtml(labels[d.status]||d.status||'Pending')+'</b></div><div><span>Current city</span><b>'+escapeHtml(d.current_city||'Not updated yet')+'</b></div><div><span>Location / hub</span><b>'+escapeHtml(d.current_location||'Not updated yet')+'</b></div><div><span>Expected delivery</span><b>'+escapeHtml(eta)+'</b></div><div><span>Carrier</span><b>'+escapeHtml(d.carrier||'Not assigned')+'</b></div><div><span>Tracking number</span><b>'+escapeHtml(d.tracking_number||'Not assigned')+'</b></div></div>'+(events.length?'<h4>Shipment journey</h4><div class="customer-timeline">'+events.map((e,i)=>'<div class="customer-event '+(i===events.length-1?'current':'')+'"><div class="dot"></div><div><b>'+escapeHtml(labels[e.status]||e.status)+'</b><span>'+escapeHtml(e.city||'Location not updated')+(e.location?' · '+escapeHtml(e.location):'')+'</span><small>'+escapeHtml(e.created_at||'')+'</small>'+(e.note?'<small>'+escapeHtml(e.note)+'</small>':'')+'</div></div>').join('')+'</div>':'<p class="muted">Tracking checkpoints will appear here as the order moves.</p>')+'</div>';
+  } catch(e) { box.innerHTML='<div class="card error">'+escapeHtml(e.message||'Tracking information is not available yet.')+'</div>'; }
+}
+
+/* =====================================================
+   LOAD CUSTOMER ORDERS
+   ===================================================== */
+
+async function loadOrders() {
+
+  try {
+
+    const response = await fetch(
+      '/api/orders/' + encodeURIComponent(user.id)
+    );
+
+    if (!response.ok) {
+
+      throw new Error(
+        'Unable to load orders'
+      );
+
+    }
+
+    const orders = await response.json();
+
+    if (!orders.length) {
+
+      ordersBox.innerHTML =
+        '<div class="card">No orders yet.</div>';
+
+      return;
+
+    }
+
+    ordersBox.innerHTML = orders
+      .map(orderCard)
+      .join('');
+
+    loadReturnRequests();
+
+  } catch (error) {
+
+    console.error(error);
+
+    ordersBox.innerHTML =
+      '<div class="card error">Unable to load orders.</div>';
+
+  }
+
+}
+
+
+/* =====================================================
+   ORDER CARD
+   ===================================================== */
+
+function orderCard(order) {
+
+  const shipmentStatus =
+    order.shipment_status || 'Not shipped';
+
+  return `
+
+    <div class="card order-card">
+
+      <b>${escapeHtml(order.order_number)}</b>
+
+      <p>
+        ₹${Number(order.total_amount || 0).toFixed(2)}
+        ·
+        ${escapeHtml(order.status || '')}
+      </p>
+
+      <p>
+        ${escapeHtml(order.recipient_name || '')},
+        ${escapeHtml(order.address_line1 || '')},
+        ${escapeHtml(order.city || '')},
+        ${escapeHtml(order.state || '')}
+        -
+        ${escapeHtml(order.postal_code || '')},
+        ${escapeHtml(order.country || '')}
+      </p>
+
+      <p>
+        <b>Shipment:</b>
+        <span class="status">
+          ${escapeHtml(shipmentStatus)}
+        </span>
+      </p>
+
+      ${
+        order.tracking_number
+        ? `
+          <p>
+            <b>Tracking:</b>
+            ${escapeHtml(order.tracking_number)}
+          </p>
+        `
+        : ''
+      }
+
+      <div class="order-actions">
+
+        <button
+          class="secondary"
+          onclick="toggleItems(${order.id})">
+          View Items
+        </button>
+
+        <button
+          class="secondary"
+          onclick="trackOrder(${order.id})">
+          🚚 Track Delivery
+        </button>
+
+        <button
+          class="secondary"
+          onclick="toggleReturn(${order.id})">
+          ↩ Request Return
+        </button>
+
+      </div>
+
+
+      <div
+        id="items-${order.id}"
+        class="items-box">
+        Loading items...
+      </div>
+
+      <div id="track-${order.id}" class="items-box"></div>
+
+
+      <div
+        id="return-${order.id}"
+        class="return-box">
+
+        <h3>Request Return</h3>
+
+        <label>
+          Select Product
+        </label>
+
+        <select
+          id="return-item-${order.id}">
+          <option value="">
+            Loading products...
+          </option>
+        </select>
+
+        <label>
+          Quantity
+        </label>
+
+        <input
+          id="return-qty-${order.id}"
+          type="number"
+          min="1"
+          value="1">
+
+        <label>
+          Reason
+        </label>
+
+        <textarea
+          id="return-reason-${order.id}"
+          rows="3"
+          placeholder="Please enter return reason"></textarea>
+
+        <div
+          id="return-message-${order.id}"
+          class="message">
+        </div>
+
+        <div class="order-actions">
+
+          <button
+            onclick="submitReturn(${order.id})">
+            Submit Return Request
+          </button>
+
+          <button
+            class="secondary"
+            onclick="toggleReturn(${order.id})">
+            Cancel
+          </button>
+
+        </div>
+
+      </div>
+
+      <div
+        id="returns-${order.id}">
+      </div>
+
+    </div>
+
+  `;
+
+}
+
+
+/* =====================================================
+   VIEW ORDER ITEMS
+   ===================================================== */
+
+async function toggleItems(orderId) {
+
+  const box =
+    document.getElementById(
+      'items-' + orderId
+    );
+
+  if (box.classList.contains('show')) {
+
+    box.classList.remove('show');
+
+    return;
+
+  }
+
+  box.classList.add('show');
+
+  try {
+
+    const response = await fetch(
+      '/api/orders/' +
+      encodeURIComponent(user.id) +
+      '/' +
+      encodeURIComponent(orderId) +
+      '/items'
+    );
+
+    if (!response.ok) {
+
+      throw new Error(
+        'Unable to load items'
+      );
+
+    }
+
+    const items = await response.json();
+
+    if (!items.length) {
+
+      box.innerHTML =
+        'No items found.';
+
+      return;
+
+    }
+
+    box.innerHTML = items.map(item => `
+
+      <div class="item-row">
+
+        <b>
+          ${escapeHtml(item.product_name)}
+        </b>
+
+        <div>
+          SKU:
+          ${escapeHtml(item.sku || '')}
+        </div>
+
+        <div>
+          Quantity:
+          ${Number(item.quantity)}
+        </div>
+
+        <div>
+          Price:
+          ₹${Number(item.unit_price || 0).toFixed(2)}
+        </div>
+
+        <div>
+          Total:
+          ₹${Number(item.total_amount || 0).toFixed(2)}
+        </div>
+
+      </div>
+
+    `).join('');
+
+  } catch (error) {
+
+    console.error(error);
+
+    box.innerHTML =
+      '<span class="error">Unable to load items.</span>';
+
+  }
+
+}
+
+
+/* =====================================================
+   OPEN RETURN FORM
+   ===================================================== */
+
+async function toggleReturn(orderId) {
+
+  const box =
+    document.getElementById(
+      'return-' + orderId
+    );
+
+  if (box.classList.contains('show')) {
+
+    box.classList.remove('show');
+
+    return;
+
+  }
+
+  box.classList.add('show');
+
+  await loadReturnItems(orderId);
+
+}
+
+
+/* =====================================================
+   LOAD ITEMS INTO RETURN SELECT
+   ===================================================== */
+
+async function loadReturnItems(orderId) {
+
+  const select =
+    document.getElementById(
+      'return-item-' + orderId
+    );
+
+  try {
+
+    const response = await fetch(
+      '/api/orders/' +
+      encodeURIComponent(user.id) +
+      '/' +
+      encodeURIComponent(orderId) +
+      '/items'
+    );
+
+    if (!response.ok) {
+
+      throw new Error(
+        'Unable to load order items'
+      );
+
+    }
+
+    const items = await response.json();
+
+    if (!items.length) {
+
+      select.innerHTML =
+        '<option value="">No products found</option>';
+
+      return;
+
+    }
+
+    select.innerHTML = items.map(item => `
+
+      <option
+        value="${Number(item.id)}"
+        data-quantity="${Number(item.quantity)}">
+
+        ${escapeHtml(item.product_name)}
+        · Qty ${Number(item.quantity)}
+        · ₹${Number(item.unit_price || 0).toFixed(2)}
+
+      </option>
+
+    `).join('');
+
+    updateReturnQuantityLimit(orderId);
+
+    select.onchange = function() {
+
+      updateReturnQuantityLimit(orderId);
+
+    };
+
+  } catch (error) {
+
+    console.error(error);
+
+    select.innerHTML =
+      '<option value="">Unable to load products</option>';
+
+  }
+
+}
+
+
+/* =====================================================
+   RETURN QUANTITY LIMIT
+   ===================================================== */
+
+function updateReturnQuantityLimit(orderId) {
+
+  const select =
+    document.getElementById(
+      'return-item-' + orderId
+    );
+
+  const quantity =
+    document.getElementById(
+      'return-qty-' + orderId
+    );
+
+  const option =
+    select.options[select.selectedIndex];
+
+  if (!option) {
+
+    quantity.max = 1;
+
+    return;
+
+  }
+
+  const max =
+    Number(option.dataset.quantity || 1);
+
+  quantity.max = max;
+
+  if (Number(quantity.value) > max) {
+
+    quantity.value = max;
+
+  }
+
+}
+
+
+/* =====================================================
+   SUBMIT RETURN REQUEST
+   ===================================================== */
+
+async function submitReturn(orderId) {
+
+  const itemSelect =
+    document.getElementById(
+      'return-item-' + orderId
+    );
+
+  const quantityInput =
+    document.getElementById(
+      'return-qty-' + orderId
+    );
+
+  const reasonInput =
+    document.getElementById(
+      'return-reason-' + orderId
+    );
+
+  const message =
+    document.getElementById(
+      'return-message-' + orderId
+    );
+
+  const orderItemId =
+    Number(itemSelect.value);
+
+  const quantity =
+    Number(quantityInput.value);
+
+  const reason =
+    reasonInput.value.trim();
+
+
+  message.className =
+    'message';
+
+  message.textContent = '';
+
+
+  if (!orderItemId) {
+
+    message.className =
+      'message error';
+
+    message.textContent =
+      'Please select a product.';
+
+    return;
+
+  }
+
+
+  if (quantity < 1) {
+
+    message.className =
+      'message error';
+
+    message.textContent =
+      'Return quantity must be at least 1.';
+
+    return;
+
+  }
+
+
+  if (!reason) {
+
+    message.className =
+      'message error';
+
+    message.textContent =
+      'Please enter return reason.';
+
+    return;
+
+  }
+
+
+  try {
+
+    const response = await fetch(
+      '/api/returns/' +
+      encodeURIComponent(user.id),
+      {
+        method: 'POST',
+
+        headers: {
+          'Content-Type':
+            'application/json'
+        },
+
+        body: JSON.stringify({
+
+          order_id: orderId,
+
+          order_item_id:
+            orderItemId,
+
+          quantity:
+            quantity,
+
+          reason:
+            reason
+
+        })
+
+      }
+    );
+
+
+    const data =
+      await response.json();
+
+
+    if (!response.ok) {
+
+      throw new Error(
+        data.detail ||
+        'Unable to submit return request'
+      );
+
+    }
+
+
+    message.className =
+      'message success';
+
+    message.textContent =
+      'Return request submitted successfully.';
+
+
+    reasonInput.value = '';
+
+    quantityInput.value = 1;
+
+
+    await loadReturnRequests();
+
+  } catch (error) {
+
+    console.error(error);
+
+    message.className =
+      'message error';
+
+    message.textContent =
+      error.message ||
+      'Unable to submit return request.';
+
+  }
+
+}
+
+
+/* =====================================================
+   LOAD CUSTOMER RETURN REQUESTS
+   ===================================================== */
+
+async function loadReturnRequests() {
+
+  try {
+
+    const response = await fetch(
+      '/api/returns/' +
+      encodeURIComponent(user.id)
+    );
+
+    if (!response.ok) {
+
+      return;
+
+    }
+
+    const returns =
+      await response.json();
+
+
+    document
+      .querySelectorAll('[id^="returns-"]')
+      .forEach(box => {
+
+        box.innerHTML = '';
+
+      });
+
+
+    returns.forEach(item => {
+
+      const box =
+        document.getElementById(
+          'returns-' + item.order_id
+        );
+
+      if (!box) {
+
+        return;
+
+      }
+
+
+      const div =
+        document.createElement('div');
+
+      div.className =
+        'return-box show';
+
+      div.innerHTML = `
+
+        <h3>Return Request</h3>
+
+        <p>
+          <b>Status:</b>
+          <span class="status">
+            ${escapeHtml(item.status || '')}
+          </span>
+        </p>
+
+        <p>
+          <b>Quantity:</b>
+          ${Number(item.quantity || 0)}
+        </p>
+
+        <p>
+          <b>Reason:</b>
+          ${escapeHtml(item.reason || '')}
+        </p>
+
+        <p>
+          <b>Refund:</b>
+          ₹${Number(item.refund_amount || 0).toFixed(2)}
+        </p>
+
+      `;
+
+      box.appendChild(div);
+
+    });
+
+
+  } catch (error) {
+
+    console.error(
+      'Unable to load returns',
+      error
+    );
+
+  }
+
+}
+
+
+/* =====================================================
+   HTML ESCAPE
+   ===================================================== */
+
+function escapeHtml(value) {
+
+  return String(
+    value ?? ''
+  )
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+
+}
+
+</script>
+
+</body>
+</html>

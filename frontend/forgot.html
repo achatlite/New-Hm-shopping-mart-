@@ -1,0 +1,463 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reset Password - HM Shopping Mart</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Arial, Helvetica, sans-serif;
+            background: linear-gradient(135deg, #2874f0, #0d47a1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 430px;
+        }
+
+        .card {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 32px;
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.22);
+        }
+
+        .logo {
+            text-align: center;
+            font-size: 28px;
+            font-weight: 700;
+            color: #2874f0;
+            margin-bottom: 8px;
+        }
+
+        .title {
+            text-align: center;
+            font-size: 22px;
+            font-weight: 600;
+            color: #222;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #777;
+            font-size: 14px;
+            margin-bottom: 25px;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 7px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        input {
+            width: 100%;
+            height: 46px;
+            border: 1px solid #d5d5d5;
+            border-radius: 6px;
+            padding: 0 13px;
+            font-size: 15px;
+            outline: none;
+            transition: 0.2s;
+        }
+
+        input:focus {
+            border-color: #2874f0;
+            box-shadow: 0 0 0 2px rgba(40, 116, 240, 0.10);
+        }
+
+        .password-box {
+            position: relative;
+        }
+
+        .password-box input {
+            padding-right: 48px;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-size: 18px;
+            color: #666;
+            padding: 4px;
+        }
+
+        .reset-btn {
+            width: 100%;
+            height: 48px;
+            border: none;
+            border-radius: 6px;
+            background: #2874f0;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 5px;
+        }
+
+        .reset-btn:hover {
+            background: #1769df;
+        }
+
+        .reset-btn:disabled {
+            background: #9bbcf5;
+            cursor: not-allowed;
+        }
+
+        .message {
+            display: none;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 18px;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .message.success {
+            display: block;
+            background: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #a5d6a7;
+        }
+
+        .message.error {
+            display: block;
+            background: #ffebee;
+            color: #c62828;
+            border: 1px solid #ef9a9a;
+        }
+
+        .back-btn {
+            display: block;
+            width: 100%;
+            text-align: center;
+            margin-top: 18px;
+            padding: 12px;
+            color: #2874f0;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .back-btn:hover {
+            text-decoration: underline;
+        }
+
+        .note {
+            margin-top: 20px;
+            padding: 12px;
+            background: #f5f7fa;
+            border-radius: 6px;
+            color: #666;
+            font-size: 12px;
+            line-height: 1.5;
+            text-align: center;
+        }
+
+        @media (max-width: 480px) {
+            .card {
+                padding: 24px 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="card">
+
+        <div class="logo">
+            HM Shopping Mart
+        </div>
+
+        <div class="title">
+            Reset Password
+        </div>
+
+        <div class="subtitle">
+            Enter your registered email or mobile number
+        </div>
+
+        <div id="message" class="message"></div>
+
+        <form id="resetForm">
+
+            <div class="form-group">
+                <label for="identifier">
+                    Email or Mobile Number
+                </label>
+
+                <input
+                    type="text"
+                    id="identifier"
+                    placeholder="Enter email or mobile number"
+                    autocomplete="username"
+                    required
+                >
+            </div>
+
+            <div class="form-group">
+
+                <label for="newPassword">
+                    New Password
+                </label>
+
+                <div class="password-box">
+
+                    <input
+                        type="password"
+                        id="newPassword"
+                        placeholder="Enter new password"
+                        autocomplete="new-password"
+                        required
+                    >
+
+                    <button
+                        type="button"
+                        class="toggle-password"
+                        onclick="togglePassword('newPassword', this)"
+                        aria-label="Show password"
+                    >
+                        👁
+                    </button>
+
+                </div>
+
+            </div>
+
+            <div class="form-group">
+
+                <label for="confirmPassword">
+                    Confirm New Password
+                </label>
+
+                <div class="password-box">
+
+                    <input
+                        type="password"
+                        id="confirmPassword"
+                        placeholder="Confirm new password"
+                        autocomplete="new-password"
+                        required
+                    >
+
+                    <button
+                        type="button"
+                        class="toggle-password"
+                        onclick="togglePassword('confirmPassword', this)"
+                        aria-label="Show password"
+                    >
+                        👁
+                    </button>
+
+                </div>
+
+            </div>
+
+            <button
+                type="submit"
+                class="reset-btn"
+                id="resetBtn"
+            >
+                Reset Password
+            </button>
+
+        </form>
+
+        <a
+            href="/index.html"
+            class="back-btn"
+        >
+            ← Back to Login
+        </a>
+
+        <div class="note">
+            Password must be at least 6 characters long.
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+    const API = 'http://localhost:8000/api';
+
+
+    function showMessage(message, type) {
+        const box = document.getElementById('message');
+
+        box.textContent = message;
+        box.className = 'message ' + type;
+    }
+
+
+    function togglePassword(inputId, button) {
+        const input = document.getElementById(inputId);
+
+        if (input.type === 'password') {
+            input.type = 'text';
+            button.textContent = '🙈';
+        } else {
+            input.type = 'password';
+            button.textContent = '👁';
+        }
+    }
+
+
+    document
+        .getElementById('resetForm')
+        .addEventListener('submit', async function(event) {
+
+            event.preventDefault();
+
+            const identifier =
+                document
+                    .getElementById('identifier')
+                    .value
+                    .trim();
+
+            const newPassword =
+                document
+                    .getElementById('newPassword')
+                    .value;
+
+            const confirmPassword =
+                document
+                    .getElementById('confirmPassword')
+                    .value;
+
+            const resetBtn =
+                document.getElementById('resetBtn');
+
+
+            if (!identifier) {
+                showMessage(
+                    'Please enter your email or mobile number.',
+                    'error'
+                );
+
+                return;
+            }
+
+
+            if (newPassword.length < 6) {
+                showMessage(
+                    'Password must be at least 6 characters.',
+                    'error'
+                );
+
+                return;
+            }
+
+
+            if (newPassword !== confirmPassword) {
+                showMessage(
+                    'Passwords do not match.',
+                    'error'
+                );
+
+                return;
+            }
+
+
+            resetBtn.disabled = true;
+            resetBtn.textContent = 'Resetting...';
+
+
+            try {
+
+                const response = await fetch(
+                    API + '/auth/reset-password',
+                    {
+                        method: 'POST',
+
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+
+                        body: JSON.stringify({
+                            identifier: identifier,
+                            new_password: newPassword
+                        })
+                    }
+                );
+
+
+                const data = await response.json();
+
+
+                if (!response.ok) {
+                    throw new Error(
+                        data.detail ||
+                        data.message ||
+                        'Unable to reset password.'
+                    );
+                }
+
+
+                showMessage(
+                    data.message ||
+                    'Password reset successfully.',
+                    'success'
+                );
+
+
+                document
+                    .getElementById('resetForm')
+                    .reset();
+
+
+                setTimeout(function() {
+                    window.location.href = '/index.html';
+                }, 1800);
+
+
+            } catch (error) {
+
+                showMessage(
+                    error.message ||
+                    'Unable to reset password.',
+                    'error'
+                );
+
+            } finally {
+
+                resetBtn.disabled = false;
+                resetBtn.textContent = 'Reset Password';
+
+            }
+
+        });
+</script>
+
+</body>
+</html>
+```
+

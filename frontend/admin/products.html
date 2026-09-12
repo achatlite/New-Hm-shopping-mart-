@@ -1,0 +1,65 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Manage Products · HM Admin</title><link rel="stylesheet" href="/style.css"><style>
+#list{
+  min-width:0;
+}
+
+#list .product{
+  min-width:0;
+  width:100%;
+  max-width:100%;
+  box-sizing:border-box;
+  overflow:hidden;
+}
+
+#list .product h3,
+#list .product p,
+#list .product b{
+  overflow-wrap:anywhere;
+  word-break:break-word;
+}
+
+#list .product .form-actions{
+  width:100%;
+  max-width:100%;
+  box-sizing:border-box;
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-top:16px;
+  align-items:stretch;
+}
+
+#list .product .form-actions .button,
+#list .product .form-actions button{
+  flex:1 1 140px;
+  min-width:0;
+  max-width:100%;
+  box-sizing:border-box;
+  white-space:normal;
+  overflow-wrap:anywhere;
+  word-break:break-word;
+  text-align:center;
+}
+
+#list .product .form-actions .button{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+}
+
+@media (max-width:700px){
+  #list .product .form-actions{
+    flex-direction:column;
+  }
+
+  #list .product .form-actions .button,
+  #list .product .form-actions button{
+    width:100%;
+    flex:0 0 auto;
+  }
+}
+</style></head><body><nav class="admin-nav"><div class="admin-nav-inner"><div class="admin-nav-brand">HM SHOPPING MART · ADMIN</div><a href="/admin/dashboard.html" class="">Dashboard</a><a href="/admin/add-product.html" class="">Add Product</a><a href="/admin/products.html" class="active">Manage Products</a><a href="/admin/orders.html" class="">Orders / Delivery</a><a href="/admin/returns.html" class="">Return Requests</a><button class="logout" onclick="logout()">Logout</button></div></nav><main class="wrap"><div class="admin-head"><div><h1>Manage My Products</h1><p>Edit or delete only products owned by this admin.</p></div><a class="button" href="/admin/add-product.html">+ Add Product</a></div><div id="list" class="grid"><div class="empty">Loading products...</div></div></main><script>
+const u=JSON.parse(localStorage.getItem('hm_admin')||'null');if(!u||!u.id)location.href='/admin/';function esc(v){return String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;')}function logout(){localStorage.removeItem('hm_admin');location.href='/admin/';}
+
+async function load(){const box=document.getElementById('list');try{const r=await fetch('/api/admin/products/'+u.id);const ps=await r.json();if(!r.ok)throw Error();if(!ps.length){box.innerHTML='<div class="empty">No products owned by this admin.</div>';return}box.innerHTML=ps.map(p=>`<article class="product"><div class="pic">${p.image_url?`<img src="${p.image_url}" alt="${esc(p.name)}" onerror="this.style.display='none'">`:'📦'}</div><h3>${esc(p.name)}</h3><p>${esc(p.category||'')}</p><b>₹${Number(p.price||0).toLocaleString('en-IN')}</b><p>MRP: <del>₹${Number(p.mrp||0).toLocaleString('en-IN')}</del> · ${Number(p.discount_percent||0)}% OFF</p><p>Stock: ${Number(p.stock_quantity||0)}</p><div class="form-actions"><a class="button" href="/admin/add-product.html?edit=${Number(p.id)}">Modify Product</a><button class="danger" onclick="event.stopPropagation();deleteProduct(${Number(p.id)})">Delete</button><button class="secondary" onclick="location.href='/admin/product-activity.html?id='+Number(p.id)">Activity</button></div></article>`).join('')}catch{box.innerHTML='<div class="empty">Unable to load products.</div>'}}async function deleteProduct(id){if(!confirm('Delete this product from your catalog? Existing order history will be preserved.'))return;try{const r=await fetch('/api/admin/products/'+u.id+'/'+id,{method:'DELETE',headers:{'Accept':'application/json'}});const text=await r.text();let x={};try{x=text?JSON.parse(text):{}}catch(_){x={detail:text||'Server returned an invalid response'}}if(!r.ok)throw Error(x.detail||x.message||'Delete failed');alert(x.message||'Product deleted successfully');load()}catch(e){alert(e.message||'Delete failed')}}load();
+</script></body></html>

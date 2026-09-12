@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Password Management - HM Shopping Mart</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Arial, Helvetica, sans-serif;
+            background: linear-gradient(135deg, #2874f0, #0d47a1);
+            padding: 30px 15px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 25px;
+        }
+
+        .header h1 {
+            margin: 0 0 8px;
+            font-size: 30px;
+        }
+
+        .header p {
+            margin: 0;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 28px;
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.22);
+        }
+
+        .card h2 {
+            margin: 0 0 8px;
+            color: #222;
+            font-size: 21px;
+        }
+
+        .card-description {
+            color: #777;
+            font-size: 13px;
+            margin-bottom: 22px;
+            line-height: 1.5;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 7px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        input {
+            width: 100%;
+            height: 44px;
+            border: 1px solid #d5d5d5;
+            border-radius: 6px;
+            padding: 0 12px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: #2874f0;
+            box-shadow: 0 0 0 2px rgba(40, 116, 240, 0.10);
+        }
+
+        .password-box {
+            position: relative;
+        }
+
+        .password-box input {
+            padding-right: 45px;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-size: 17px;
+        }
+
+        .btn {
+            width: 100%;
+            height: 46px;
+            border: none;
+            border-radius: 6px;
+            color: white;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 5px;
+        }
+
+        .reset-btn {
+            background: #2874f0;
+        }
+
+        .reset-btn:hover {
+            background: #1769df;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .message {
+            display: none;
+            padding: 11px;
+            border-radius: 6px;
+            margin-bottom: 17px;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        .message.success {
+            display: block;
+            background: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #a5d6a7;
+        }
+
+        .message.error {
+            display: block;
+            background: #ffebee;
+            color: #c62828;
+            border: 1px solid #ef9a9a;
+        }
+
+        .security-note {
+            background: #f5f7fa;
+            padding: 11px;
+            border-radius: 6px;
+            color: #666;
+            font-size: 12px;
+            line-height: 1.5;
+            margin-top: 18px;
+            text-align: center;
+        }
+
+        .back {
+            display: block;
+            width: 100%;
+            text-align: center;
+            color: white;
+            text-decoration: none;
+            margin-top: 22px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .back:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 550px) {
+            body {
+                padding: 20px 12px;
+            }
+
+            .header h1 {
+                font-size: 25px;
+            }
+
+            .card {
+                padding: 22px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="header">
+        <h1>🛡️ HM Shopping Mart</h1>
+        <p>Admin Password Management</p>
+    </div>
+
+    <div class="card">
+
+        <h2>🔑 Reset Admin Password</h2>
+
+        <div class="card-description">
+            Reset your admin password using your registered email, mobile number, or username.
+        </div>
+
+        <div id="resetMessage" class="message"></div>
+
+        <form id="resetForm">
+
+            <div class="form-group">
+
+                <label for="resetIdentifier">
+                    Email, Mobile Number or Username
+                </label>
+
+                <input
+                    type="text"
+                    id="resetIdentifier"
+                    placeholder="Enter email, mobile or username"
+                    autocomplete="username"
+                    required
+                >
+
+            </div>
+
+            <div class="form-group">
+
+                <label for="resetPassword">
+                    New Password
+                </label>
+
+                <div class="password-box">
+
+                    <input
+                        type="password"
+                        id="resetPassword"
+                        placeholder="Enter new password"
+                        autocomplete="new-password"
+                        required
+                    >
+
+                    <button
+                        type="button"
+                        class="toggle-password"
+                        onclick="togglePassword('resetPassword', this)"
+                    >
+                        👁
+                    </button>
+
+                </div>
+
+            </div>
+
+            <div class="form-group">
+
+                <label for="resetConfirmPassword">
+                    Confirm New Password
+                </label>
+
+                <div class="password-box">
+
+                    <input
+                        type="password"
+                        id="resetConfirmPassword"
+                        placeholder="Confirm new password"
+                        autocomplete="new-password"
+                        required
+                    >
+
+                    <button
+                        type="button"
+                        class="toggle-password"
+                        onclick="togglePassword('resetConfirmPassword', this)"
+                    >
+                        👁
+                    </button>
+
+                </div>
+
+            </div>
+
+            <button
+                type="submit"
+                class="btn reset-btn"
+                id="resetBtn"
+            >
+                Reset Password
+            </button>
+
+        </form>
+
+        <div class="security-note">
+            🛡️ Only registered admin accounts can reset their password.
+        </div>
+
+    </div>
+
+    <a
+        href="/admin/index.html"
+        class="back"
+    >
+        ← Back to Admin Login
+    </a>
+
+</div>
+
+
+<script>
+
+    const API = 'http://localhost:8000/api';
+
+
+    function togglePassword(inputId, button) {
+
+        const input = document.getElementById(inputId);
+
+        if (input.type === 'password') {
+
+            input.type = 'text';
+            button.textContent = '🙈';
+
+        } else {
+
+            input.type = 'password';
+            button.textContent = '👁';
+
+        }
+    }
+
+
+    function showMessage(elementId, message, type) {
+
+        const box = document.getElementById(elementId);
+
+        box.textContent = message;
+        box.className = 'message ' + type;
+
+    }
+
+
+    // ==========================
+    // RESET ADMIN PASSWORD
+    // ==========================
+
+    document
+        .getElementById('resetForm')
+        .addEventListener('submit', async function(event) {
+
+            event.preventDefault();
+
+            const identifier =
+                document
+                    .getElementById('resetIdentifier')
+                    .value
+                    .trim();
+
+            const password =
+                document
+                    .getElementById('resetPassword')
+                    .value;
+
+            const confirmPassword =
+                document
+                    .getElementById('resetConfirmPassword')
+                    .value;
+
+            const button =
+                document.getElementById('resetBtn');
+
+
+            if (!identifier) {
+
+                showMessage(
+                    'resetMessage',
+                    'Please enter your email, mobile number or username.',
+                    'error'
+                );
+
+                return;
+            }
+
+
+            if (password.length < 6) {
+
+                showMessage(
+                    'resetMessage',
+                    'Password must be at least 6 characters.',
+                    'error'
+                );
+
+                return;
+            }
+
+
+            if (password !== confirmPassword) {
+
+                showMessage(
+                    'resetMessage',
+                    'Passwords do not match.',
+                    'error'
+                );
+
+                return;
+            }
+
+
+            button.disabled = true;
+            button.textContent = 'Resetting...';
+
+
+            try {
+
+                const response = await fetch(
+                    API + '/admin/reset-password',
+                    {
+                        method: 'POST',
+
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+
+                        body: JSON.stringify({
+                            identifier: identifier,
+                            new_password: password
+                        })
+                    }
+                );
+
+
+                const data = await response.json();
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        data.detail ||
+                        data.message ||
+                        'Unable to reset password.'
+                    );
+
+                }
+
+
+                showMessage(
+                    'resetMessage',
+                    data.message ||
+                    'Admin password reset successfully.',
+                    'success'
+                );
+
+
+                document
+                    .getElementById('resetForm')
+                    .reset();
+
+
+            } catch (error) {
+
+                showMessage(
+                    'resetMessage',
+                    error.message ||
+                    'Unable to reset password.',
+                    'error'
+                );
+
+            } finally {
+
+                button.disabled = false;
+                button.textContent = 'Reset Password';
+
+            }
+
+        });
+
+</script>
+
+</body>
+</html>

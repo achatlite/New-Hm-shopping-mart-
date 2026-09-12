@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Login User - HM Shopping Mart</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+
+<body>
+<div class="modal-page">
+  <div class="loginbox standalone">
+
+    <div class="welcome">
+      <h2>Welcome Back!</h2>
+      <p>Login to continue shopping</p>
+      <div class="bigbag">🛍️</div>
+      <p>Access your orders, wishlist and exclusive offers</p>
+      <button class="secondary" type="button" onclick="history.back()">← Back</button>
+    </div>
+
+    <div class="form">
+      <h2>Login User</h2>
+      <p>Login to access your account</p>
+
+      <label for="identifier">Mobile Number or Email ID</label>
+      <input
+        id="identifier"
+        autocomplete="username"
+        placeholder="Enter mobile number or email ID"
+      >
+
+      <label for="password">Password</label>
+
+      <div class="pw">
+        <input
+          id="password"
+          type="password"
+          autocomplete="current-password"
+          placeholder="Enter your password"
+        >
+        <button type="button" onclick="togglePassword()">👁</button>
+      </div>
+
+      <a href="/forgot.html">Forgot Password?</a>
+
+      <button type="button" onclick="loginUser()">Login</button>
+
+      <div class="or">OR</div>
+
+      <button
+        class="outline full"
+        type="button"
+        onclick="location.href='/register.html'"
+      >
+        ＋ Create New User
+      </button>
+
+      <p>New customer? <a href="/register.html">Create New User</a></p>
+
+      <p id="message" class="form-message" role="alert"></p>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+
+function showMessage(text, ok = false) {
+  $('message').textContent = text;
+  $('message').className = 'form-message ' + (ok ? 'success' : 'error');
+}
+
+function togglePassword() {
+  const x = $('password');
+  const b = x.nextElementSibling;
+
+  x.type = x.type === 'password' ? 'text' : 'password';
+  b.textContent = x.type === 'password' ? '👁' : '🙈';
+}
+
+/*
+ * Login ke baad kahan jana hai:
+ *
+ * /login.html
+ * /login.html?next=/checkout.html?product=12
+ *
+ * Agar next diya gaya hai to login ke baad wahi page open hoga.
+ */
+function getNextUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const next = params.get('next');
+
+  if (!next) {
+    return '/';
+  }
+
+  /*
+   * Security ke liye sirf same-site relative URLs allow kar rahe hain.
+   * http:// ya https:// jaise external URLs reject honge.
+   */
+  if (!next.startsWith('/') || next.startsWith('//')) {
+    return '/';
+  }
+
+  return next;
+}
+
+async function syncLocalCartToServer(user) {
+  if (!user || !user.id) return;
+  let items = [];
+  try { items = JSON.parse(localStorage.getItem('hm_cart') || '[]'); } catch(e) { items = []; }
+  if (!Array.isArray(items) || !items.length) return;
+  for (const item of items) {
+    try {
+      await fetch('/api/cart/' + encodeURIComponent(user.id), {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({product_id:Number(item.id), quantity:Number(item.quantity || 1)})
+      });
+    } catch(e) { console.warn('Cart sync failed', e); }
+  }
+  localStorage.removeItem('hm_cart');
+}
+
+async function loginUser() {
+  const identifier = $('identifier').value.trim();
+  const password = $('password').value;
+
+  if (!identifier || !password) {
+    showMessage('Please enter mobile/email and password.');
+    return;
+  }
+
+  showMessage('Logging in...');
+
+  try {
+    const r = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        identifier,
+        password
+      })
+    });
+
+    const x = await r.json();
+
+    if (!r.ok) {
+      const detail =
+        typeof x.detail === 'string'
+          ? x.detail
+          : 'Login failed. Please check your details.';
+
+      showMessage(detail);
+      return;
+    }
+
+    /*
+     * Backend se jo customer data aa raha hai
+     * usko preserve kar rahe hain.
+     */
+    localStorage.setItem('hm_user', JSON.stringify(x));
+
+    await syncLocalCartToServer(x);
+
+    showMessage('Login successful.', true);
+
+    const nextUrl = getNextUrl();
+
+    setTimeout(() => {
+      location.href = nextUrl;
+    }, 400);
+
+  } catch (e) {
+    showMessage('Unable to connect to server. Please try again.');
+  }
+}
+
+/*
+ * Enter key se bhi login ho sake.
+ */
+$('identifier').addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    loginUser();
+  }
+});
+
+$('password').addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    loginUser();
+  }
+});
+</script>
+
+</body>
+</html>
+

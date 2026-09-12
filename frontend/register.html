@@ -1,0 +1,534 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Create New User - HM Shopping Mart</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+
+<body>
+
+<div class="modal-page">
+
+  <div class="form card register-card">
+
+    <h2>Create New User</h2>
+    <p>Create your HM Shopping Mart customer account</p>
+
+    <label for="name">Full Name</label>
+    <input
+      id="name"
+      autocomplete="name"
+      placeholder="Enter full name"
+    >
+
+    <label for="username">Username</label>
+    <input
+      id="username"
+      autocomplete="username"
+      placeholder="Choose a username"
+      maxlength="80"
+    >
+
+    <small style="display:block;margin:-5px 0 12px;color:#777;">
+      Username can contain letters, numbers, underscore (_) and dot (.).
+    </small>
+
+    <label for="email">Email</label>
+    <input
+      id="email"
+      type="email"
+      autocomplete="email"
+      placeholder="Enter email address"
+    >
+
+    <label for="phone">Mobile Number</label>
+    <input
+      id="phone"
+      inputmode="numeric"
+      autocomplete="tel"
+      placeholder="Enter mobile number"
+    >
+
+    <label for="password">Password</label>
+
+    <div class="pw">
+      <input
+        id="password"
+        type="password"
+        autocomplete="new-password"
+        placeholder="Create password"
+      >
+
+      <button
+        type="button"
+        onclick="togglePassword()"
+      >
+        👁
+      </button>
+    </div>
+
+    <label class="check">
+      <input id="agree" type="checkbox">
+      I agree to create a customer account
+    </label>
+
+    <button
+      type="button"
+      onclick="registerUser()"
+    >
+      Create User
+    </button>
+
+    <button
+      class="secondary"
+      type="button"
+      onclick="history.back()"
+    >
+      ← Back
+    </button>
+
+    <p>
+      Already have an account?
+      <a href="/login.html">
+        Login User
+      </a>
+    </p>
+
+    <p
+      id="message"
+      class="form-message"
+      role="alert"
+    ></p>
+
+  </div>
+
+</div>
+
+
+<script>
+
+const $ = id =>
+  document.getElementById(id);
+
+
+/* =========================================================
+   SHOW MESSAGE
+   ========================================================= */
+
+function showMessage(text, ok = false) {
+
+  $('message').textContent = text;
+
+  $('message').className =
+    'form-message ' +
+    (ok ? 'success' : 'error');
+
+}
+
+
+/* =========================================================
+   PASSWORD SHOW / HIDE
+   ========================================================= */
+
+function togglePassword() {
+
+  const password =
+    $('password');
+
+  const button =
+    password.nextElementSibling;
+
+  password.type =
+    password.type === 'password'
+      ? 'text'
+      : 'password';
+
+  button.textContent =
+    password.type === 'password'
+      ? '👁'
+      : '🙈';
+
+}
+
+
+/* =========================================================
+   EMAIL VALIDATION
+   ========================================================= */
+
+function validEmail(value) {
+
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    .test(value);
+
+}
+
+
+/* =========================================================
+   USERNAME VALIDATION
+   ========================================================= */
+
+function validUsername(value) {
+
+  return /^[a-zA-Z0-9_.]{3,80}$/
+    .test(value);
+
+}
+
+
+/* =========================================================
+   REGISTER CUSTOMER
+   ========================================================= */
+
+async function syncLocalCartToServer(user) {
+  if (!user || !user.id) return;
+  let items = [];
+  try { items = JSON.parse(localStorage.getItem('hm_cart') || '[]'); } catch(e) { items = []; }
+  if (!Array.isArray(items) || !items.length) return;
+  for (const item of items) {
+    try {
+      await fetch('/api/cart/' + encodeURIComponent(user.id), {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({product_id:Number(item.id), quantity:Number(item.quantity || 1)})
+      });
+    } catch(e) { console.warn('Cart sync failed', e); }
+  }
+  localStorage.removeItem('hm_cart');
+}
+
+async function registerUser() {
+
+  const full_name =
+    $('name')
+      .value
+      .trim();
+
+  const username =
+    $('username')
+      .value
+      .trim()
+      .toLowerCase();
+
+  const email =
+    $('email')
+      .value
+      .trim()
+      .toLowerCase();
+
+  const phone =
+    $('phone')
+      .value
+      .trim();
+
+  const password =
+    $('password')
+      .value;
+
+
+  /* -------------------------------------------------------
+     FULL NAME
+     ------------------------------------------------------- */
+
+  if (!full_name) {
+
+    showMessage(
+      'Please enter your full name.'
+    );
+
+    $('name').focus();
+
+    return;
+  }
+
+
+  /* -------------------------------------------------------
+     USERNAME
+     ------------------------------------------------------- */
+
+  if (!username) {
+
+    showMessage(
+      'Please choose a username.'
+    );
+
+    $('username').focus();
+
+    return;
+  }
+
+
+  if (!validUsername(username)) {
+
+    showMessage(
+      'Username must be 3-80 characters and can contain only letters, numbers, underscore (_) or dot (.).'
+    );
+
+    $('username').focus();
+
+    return;
+  }
+
+
+  /* -------------------------------------------------------
+     EMAIL
+     ------------------------------------------------------- */
+
+  if (
+    !email ||
+    !validEmail(email)
+  ) {
+
+    showMessage(
+      'Please enter a valid email address.'
+    );
+
+    $('email').focus();
+
+    return;
+  }
+
+
+  /* -------------------------------------------------------
+     PHONE
+     ------------------------------------------------------- */
+
+  if (
+    phone &&
+    !/^[0-9+() -]{7,20}$/.test(phone)
+  ) {
+
+    showMessage(
+      'Please enter a valid mobile number.'
+    );
+
+    $('phone').focus();
+
+    return;
+  }
+
+
+  /* -------------------------------------------------------
+     PASSWORD
+     ------------------------------------------------------- */
+
+  if (password.length < 6) {
+
+    showMessage(
+      'Password must be at least 6 characters.'
+    );
+
+    $('password').focus();
+
+    return;
+  }
+
+
+  /* -------------------------------------------------------
+     AGREEMENT
+     ------------------------------------------------------- */
+
+  if (!$('agree').checked) {
+
+    showMessage(
+      'Please confirm the checkbox to create a customer account.'
+    );
+
+    return;
+  }
+
+
+  showMessage(
+    'Creating your account...'
+  );
+
+
+  try {
+
+    /* -----------------------------------------------------
+       SEND REGISTRATION REQUEST
+       ----------------------------------------------------- */
+
+    const response =
+      await fetch(
+        '/api/auth/register',
+        {
+          method: 'POST',
+
+          headers: {
+            'Content-Type':
+              'application/json'
+          },
+
+          body: JSON.stringify({
+            full_name: full_name,
+            username: username,
+            email: email,
+            password: password,
+            phone: phone || null
+          })
+        }
+      );
+
+
+    let data = {};
+
+    try {
+
+      data =
+        await response.json();
+
+    } catch (error) {
+
+      data = {};
+
+    }
+
+
+    /* -----------------------------------------------------
+       REGISTRATION ERROR
+       ----------------------------------------------------- */
+
+    if (!response.ok) {
+
+      const detail =
+        data.detail;
+
+
+      if (Array.isArray(detail)) {
+
+        showMessage(
+          detail
+            .map(
+              item =>
+                item.msg ||
+                'Invalid field'
+            )
+            .join(', ')
+        );
+
+      } else {
+
+        showMessage(
+          typeof detail === 'string'
+            ? detail
+            : 'Registration failed. Please check your details.'
+        );
+
+      }
+
+      return;
+    }
+
+
+    /* -----------------------------------------------------
+       SUCCESS
+       ----------------------------------------------------- */
+
+    if (
+      !data.user ||
+      !data.user.id
+    ) {
+
+      showMessage(
+        'Account created, but login information was not received.'
+      );
+
+      return;
+    }
+
+
+    /*
+     * Customer ko immediately logged-in rakho.
+     *
+     * Backend response:
+     *
+     * {
+     *   id,
+     *   name,
+     *   username,
+     *   email,
+     *   phone,
+     *   role
+     * }
+     */
+    localStorage.setItem(
+      'hm_user',
+      JSON.stringify(data.user)
+    );
+
+    await syncLocalCartToServer(data.user);
+
+
+    showMessage(
+      'Account created successfully. Redirecting...',
+      true
+    );
+
+
+    /* -----------------------------------------------------
+       CHECK PENDING CHECKOUT
+       ----------------------------------------------------- */
+
+    const pendingCheckout =
+      sessionStorage.getItem(
+        'hm_pending_checkout'
+      );
+
+
+    if (pendingCheckout) {
+
+      sessionStorage.removeItem(
+        'hm_pending_checkout'
+      );
+
+
+      setTimeout(
+        function() {
+
+          location.href =
+            pendingCheckout;
+
+        },
+        500
+      );
+
+      return;
+    }
+
+
+    /* -----------------------------------------------------
+       NORMAL REGISTRATION
+       ----------------------------------------------------- */
+
+    setTimeout(
+      function() {
+
+        location.href =
+          '/';
+
+      },
+      500
+    );
+
+
+  } catch (error) {
+
+    console.error(
+      'Registration error:',
+      error
+    );
+
+    showMessage(
+      'Unable to connect to server. Please try again.'
+    );
+
+  }
+
+}
+
+</script>
+
+</body>
+</html>
+

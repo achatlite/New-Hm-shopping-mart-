@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HM Shopping Mart - Help & Support</title>
+<link rel="stylesheet" href="/style.css">
+<style>
+.support-wrap{max-width:900px;margin:30px auto;padding:0 18px}.card{background:#fff;border:1px solid #e5e5e5;border-radius:12px;padding:20px;margin-bottom:18px}.ticket{border-top:1px solid #eee;padding:14px 0}.ticket:first-child{border-top:0}.status{font-weight:700;text-transform:capitalize}.muted{color:#666}
+textarea{width:100%;min-height:130px;resize:vertical}input,textarea{box-sizing:border-box}
+</style>
+</head>
+<body>
+<div class="support-wrap">
+  <button class="secondary" onclick="history.back()">← Back</button>
+  <h1>Help & Support</h1>
+  <p class="muted">Create a support request and track your previous requests.</p>
+  <div class="card">
+    <h2>Raise a Ticket</h2>
+    <input id="subject" maxlength="255" placeholder="Subject">
+    <textarea id="message" placeholder="Describe your issue"></textarea>
+    <button onclick="createTicket()" id="sendBtn">Submit Ticket</button>
+    <p id="msg" role="alert"></p>
+  </div>
+  <div class="card">
+    <h2>My Support Requests</h2>
+    <div id="tickets">Loading...</div>
+  </div>
+</div>
+<script>
+function user(){try{return JSON.parse(localStorage.getItem('hm_user')||'null')}catch(e){return null}}
+function esc(s){return String(s??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
+async function loadTickets(){
+ const u=user(); if(!u||!u.id){location.href='/index.html';return;}
+ try{const r=await fetch('/api/support/'+encodeURIComponent(u.id));const x=await r.json();if(!r.ok)throw Error(x.detail||'Unable to load tickets');
+ document.getElementById('tickets').innerHTML=x.length?x.map(t=>`<div class="ticket"><b>${esc(t.subject)}</b><div class="muted">Status: <span class="status">${esc(t.status)}</span> · ${new Date(t.created_at).toLocaleString('en-IN')}</div><p>${esc(t.message)}</p></div>`).join(''):'<p class="muted">No support requests yet.</p>';
+ }catch(e){document.getElementById('tickets').textContent=e.message}}
+async function createTicket(){
+ const u=user();const subject=document.getElementById('subject').value.trim(),message=document.getElementById('message').value.trim(),msg=document.getElementById('msg'),btn=document.getElementById('sendBtn');
+ if(!subject||!message){msg.textContent='Subject and message are required.';return}
+ btn.disabled=true;msg.textContent='Submitting...';
+ try{const r=await fetch('/api/support/'+encodeURIComponent(u.id),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({subject,message})});const x=await r.json();if(!r.ok)throw Error(x.detail||'Unable to submit ticket');document.getElementById('subject').value='';document.getElementById('message').value='';msg.textContent=x.message||'Ticket created successfully.';await loadTickets()}catch(e){msg.textContent=e.message}finally{btn.disabled=false}}
+loadTickets();
+</script>
+</body></html>

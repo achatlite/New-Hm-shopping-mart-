@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Checkout - HM Shopping Mart</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+
+<body>
+
+<div class="top">🚚 Secure Checkout</div>
+
+<main class="checkout">
+
+  <button class="secondary backbtn" onclick="history.back()">← Back</button>
+
+  <div class="checkout-grid">
+
+    <section class="card">
+      <h2>Delivery Address</h2>
+
+      <p>Complete address required: name, phone, address, PIN code, city, state and country.</p><div id="savedAddress" style="margin:10px 0"></div><button type="button" class="secondary" onclick="toggleAddressEdit()">Change / Update Address</button>
+
+      <input id="rn" placeholder="Recipient Name">
+      <input id="phone" placeholder="Phone">
+      <input id="a1" placeholder="Address Line 1">
+      <input id="a2" placeholder="Address Line 2">
+
+      <div class="two">
+        <input id="city" placeholder="City">
+        <input id="state" placeholder="State">
+      </div>
+
+      <div class="two">
+        <input id="pin" placeholder="PIN Code">
+        <input id="country" value="India" placeholder="Country">
+      </div>
+    </section>
+
+    <aside class="card">
+
+      <h2 id="pn">Product</h2>
+
+      <div id="summary">Loading...</div>
+
+      <hr>
+
+      <h3>Payment</h3>
+
+      <div class="payment-mode-note">
+        <b>HM Demo Payment</b> — testing mode. Use any dummy/test details; no real payment is processed.
+      </div>
+
+      <div class="payment-methods" role="tablist" aria-label="Payment methods">
+        <button type="button" class="pay-tab active" data-method="card" onclick="selectPayment('card')">💳 Card</button>
+        <button type="button" class="pay-tab" data-method="upi" onclick="selectPayment('upi')">📱 UPI</button>
+        <button type="button" class="pay-tab" data-method="netbanking" onclick="selectPayment('netbanking')">🏦 Net Banking</button>
+        <button type="button" class="pay-tab" data-method="wallet" onclick="selectPayment('wallet')">👛 Wallet</button>
+      </div>
+
+      <div id="payment-card" class="payment-panel">
+        <label for="cardNumber">Card Number</label>
+        <input id="cardNumber" inputmode="numeric" autocomplete="off" placeholder="Any test card number" maxlength="23">
+        <div class="two">
+          <div><label for="cardExpiry">Expiry</label><input id="cardExpiry" inputmode="numeric" autocomplete="off" placeholder="MM/YY" maxlength="5"></div>
+          <div><label for="cardCvv">CVV</label><input id="cardCvv" inputmode="numeric" autocomplete="off" placeholder="Any 3 or 4 digits" maxlength="4"></div>
+        </div>
+        <label for="cardName">Name on Card</label>
+        <input id="cardName" autocomplete="off" placeholder="Test Customer">
+      </div>
+
+      <div id="payment-upi" class="payment-panel" hidden>
+        <label for="upiId">UPI ID</label>
+        <input id="upiId" autocomplete="off" placeholder="anything@example">
+        <small class="payment-hint">Demo mode accepts any non-empty UPI ID.</small>
+      </div>
+
+      <div id="payment-netbanking" class="payment-panel" hidden>
+        <label for="bankName">Select Bank</label>
+        <select id="bankName">
+          <option value="">Select any bank</option>
+          <option>HDFC Bank</option><option>ICICI Bank</option><option>SBI</option><option>Axis Bank</option><option>Other Bank</option>
+        </select>
+        <label for="bankRef">Demo Login/Reference</label>
+        <input id="bankRef" autocomplete="off" placeholder="Any test value">
+      </div>
+
+      <div id="payment-wallet" class="payment-panel" hidden>
+        <label for="walletName">Wallet</label>
+        <select id="walletName">
+          <option value="">Select wallet</option>
+          <option>Paytm Demo</option><option>PhonePe Demo</option><option>Amazon Pay Demo</option><option>Other Wallet</option>
+        </select>
+        <label for="walletRef">Wallet ID / Mobile</label>
+        <input id="walletRef" autocomplete="off" placeholder="Any test value">
+      </div>
+
+      <div id="paymentMessage" class="payment-message" aria-live="polite"></div>
+
+      <button id="payButton" onclick="place()">Pay &amp; Place Order</button>
+
+    </aside>
+
+  </div>
+</main>
+
+<script>
+/*
+ * Current product ID.
+ */
+const params = new URLSearchParams(location.search);
+const pid = params.get('product');
+const isCartCheckout = params.get('cart') === '1';
+
+/*
+ * Current logged-in customer.
+ */
+let currentUser = null;
+let prod = null;
+let cartItems = [];
+let savedAddress = null;
+let editingAddress = false;
+
+/*
+ * Safe element helper.
+ */
+const $ = id => document.getElementById(id);
+
+
+/*
+ * ============================================================
+ * LOGIN CHECK
+ * ============================================================
+ *
+ * Agar customer logged in nahi hai:
+ *
+ * checkout.html?product=12
+ *
+ * ko preserve karke:
+ *
+ * /login.html?next=%2Fcheckout.html%3Fproduct%3D12
+ *
+ * par bhejenge.
+ *
+ * Login ke baad login.html isi URL par wapas bhejega.
+ */
+function checkLogin() {
+
+  const rawUser = localStorage.getItem('hm_user');
+
+  if (!rawUser) {
+
+    const next = location.pathname + location.search;
+
+    location.href =
+      '/login.html?next=' +
+      encodeURIComponent(next);
+
+    return false;
+  }
+
+  try {
+
+    currentUser = JSON.parse(rawUser);
+
+  } catch (e) {
+
+    localStorage.removeItem('hm_user');
+
+    const next = location.pathname + location.search;
+
+    location.href =
+      '/login.html?next=' +
+      encodeURIComponent(next);
+
+    return false;
+  }
+
+  /*
+   * User object mein ID hona zaroori hai.
+   */
+  if (!currentUser || !currentUser.id) {
+
+    localStorage.removeItem('hm_user');
+
+    const next = location.pathname + location.search;
+
+    location.href =
+      '/login.html?next=' +
+      encodeURIComponent(next);
+
+    return false;
+  }
+
+  return true;
+}
+
+
+/*
+ * ============================================================
+ * LOAD PRODUCT
+ * ============================================================
+ */
+async function load() {
+
+  if (!checkLogin()) return;
+
+  await loadSavedAddress();
+
+  try {
+    if (isCartCheckout) {
+      const r = await fetch('/api/cart/' + encodeURIComponent(currentUser.id));
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.detail || 'Unable to load cart');
+      cartItems = Array.isArray(data) ? data : [];
+      if (!cartItems.length) {
+        $('pn').textContent = 'Cart is empty';
+        $('summary').innerHTML = '<p>Your cart is empty. Please add products first.</p>';
+        return;
+      }
+      let total = 0;
+      $('pn').textContent = 'Order Summary';
+      $('summary').innerHTML = cartItems.map(item => {
+        const q=Number(item.quantity||1), price=Number(item.price||0), line=price*q; total+=line;
+        return `<div style="margin-bottom:12px"><b>${escapeHtml(item.name)}</b><br>Qty: ${q} × ₹${price.toLocaleString('en-IN')} = <b>₹${line.toLocaleString('en-IN')}</b></div>`;
+      }).join('') + `<hr><h2>Total: ₹${total.toLocaleString('en-IN')}</h2>`;
+      return;
+    }
+
+    if (!pid) {
+      $('pn').textContent = 'Product not found';
+      $('summary').innerHTML = '<p>Invalid product selected.</p>';
+      return;
+    }
+
+    const r = await fetch('/api/products/' + encodeURIComponent(pid));
+    const data = await r.json();
+    if (!r.ok) {
+      $('pn').textContent = 'Product unavailable';
+      $('summary').innerHTML = '<p>' + (data.detail || 'Unable to load product.') + '</p>';
+      return;
+    }
+    prod = data;
+    $('pn').textContent = prod.name;
+    $('summary').innerHTML = `<p>${escapeHtml(prod.description || 'Product details available from seller.')}</p><h2>₹${Number(prod.price).toLocaleString('en-IN')}</h2><p>MRP <del>₹${Number(prod.mrp).toLocaleString('en-IN')}</del> &nbsp; <b>${Number(prod.discount_percent || 0)}% OFF</b></p><p>Quantity: 1</p>`;
+  } catch (e) {
+    $('pn').textContent = 'Error';
+    $('summary').innerHTML = '<p>Unable to connect to server.</p>';
+  }
+}
+
+
+async function loadSavedAddress() {
+  try {
+    const r = await fetch('/api/addresses/' + encodeURIComponent(currentUser.id));
+    if (!r.ok) return;
+    const list = await r.json();
+    savedAddress = Array.isArray(list) && list.length ? list[0] : null;
+    if (savedAddress) {
+      fillAddress(savedAddress);
+      renderSavedAddress();
+      document.querySelectorAll('#rn,#phone,#a1,#a2,#city,#state,#pin,#country').forEach(x=>x.disabled=true);
+    }
+  } catch (e) { console.warn('Saved address unavailable', e); }
+}
+function fillAddress(a) {
+  $('rn').value=a.recipient_name||''; $('phone').value=a.phone||''; $('a1').value=a.address_line1||''; $('a2').value=a.address_line2||''; $('city').value=a.city||''; $('state').value=a.state||''; $('pin').value=a.postal_code||''; $('country').value=a.country||'India';
+}
+function renderSavedAddress() {
+  if (!savedAddress) { $('savedAddress').innerHTML='<b>No saved address yet.</b>'; return; }
+  $('savedAddress').innerHTML='<div style="padding:10px;border:1px solid #ddd;border-radius:8px"><b>Saved address</b><br>'+escapeHtml(savedAddress.recipient_name)+', '+escapeHtml(savedAddress.address_line1)+', '+escapeHtml(savedAddress.city)+', '+escapeHtml(savedAddress.state)+' - '+escapeHtml(savedAddress.postal_code)+'<br><small>Last updated: '+escapeHtml(savedAddress.updated_at||savedAddress.created_at||'')+'</small></div>';
+}
+function toggleAddressEdit() { editingAddress=!editingAddress; document.querySelectorAll('#rn,#phone,#a1,#a2,#city,#state,#pin,#country').forEach(x=>x.disabled=!editingAddress); if(editingAddress) document.getElementById('rn').focus(); }
+async function saveAddressIfNeeded() {
+  if (!savedAddress) return null;
+  const address = {recipient_name:$('rn').value.trim(),phone:$('phone').value.trim(),address_line1:$('a1').value.trim(),address_line2:$('a2').value.trim()||null,city:$('city').value.trim(),state:$('state').value.trim(),postal_code:$('pin').value.trim(),country:$('country').value.trim()||'India',address_type:'home',is_default:true};
+  if (!editingAddress) return savedAddress.id;
+  const r=await fetch('/api/addresses/'+currentUser.id+'/'+savedAddress.id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(address)});
+  const x=await r.json(); if(!r.ok) throw Error(x.detail||'Address update failed');
+  savedAddress={...savedAddress,...address,updated_at:new Date().toISOString()}; editingAddress=false; renderSavedAddress(); document.querySelectorAll('#rn,#phone,#a1,#a2,#city,#state,#pin,#country').forEach(x=>x.disabled=true); return savedAddress.id;
+}
+
+let selectedPayment = 'card';
+
+function selectPayment(method) {
+  selectedPayment = method;
+  document.querySelectorAll('.pay-tab').forEach(btn => btn.classList.toggle('active', btn.dataset.method === method));
+  document.querySelectorAll('.payment-panel').forEach(panel => {
+    panel.hidden = panel.id !== 'payment-' + method;
+  });
+  $('paymentMessage').textContent = '';
+}
+
+function onlyDigits(value) { return (value || '').replace(/\D/g, ''); }
+
+function validatePayment() {
+  const message = $('paymentMessage');
+  message.textContent = '';
+  if (selectedPayment === 'card') {
+    const number = onlyDigits($('cardNumber').value);
+    const expiry = $('cardExpiry').value.trim();
+    const cvv = onlyDigits($('cardCvv').value);
+    const name = $('cardName').value.trim();
+    if (!number || number.length < 4) return failPayment('Enter any test card number (at least 4 digits).');
+    if (!/^\d{2}\/\d{2}$/.test(expiry)) return failPayment('Enter expiry in MM/YY format.');
+    if (cvv.length < 3) return failPayment('Enter any 3 or 4 digit test CVV.');
+    if (!name) return failPayment('Enter the name on card.');
+  } else if (selectedPayment === 'upi') {
+    if (!$('upiId').value.trim()) return failPayment('Enter any test UPI ID.');
+  } else if (selectedPayment === 'netbanking') {
+    if (!$('bankName').value) return failPayment('Select a demo bank.');
+    if (!$('bankRef').value.trim()) return failPayment('Enter any test bank reference/login value.');
+  } else if (selectedPayment === 'wallet') {
+    if (!$('walletName').value) return failPayment('Select a demo wallet.');
+    if (!$('walletRef').value.trim()) return failPayment('Enter any test wallet value.');
+  }
+  return true;
+}
+
+function failPayment(text) { $('paymentMessage').textContent = text; return false; }
+
+function paymentLabel() {
+  return ({card:'Card Demo', upi:'UPI Demo', netbanking:'Net Banking Demo', wallet:'Wallet Demo'})[selectedPayment];
+}
+
+/*
+ * ============================================================
+ * PLACE ORDER
+ * ============================================================
+ */
+async function place() {
+  if (!checkLogin()) return;
+  if (!isCartCheckout && (!pid || !prod)) return alert('Product information is not available.');
+  if (isCartCheckout && !cartItems.length) return alert('Your cart is empty.');
+  if (!validatePayment()) return;
+
+  const address = {
+    recipient_name: $('rn').value.trim(),
+    phone: $('phone').value.trim(),
+    address_line1: $('a1').value.trim(),
+    address_line2: $('a2').value.trim() || null,
+    city: $('city').value.trim(),
+    state: $('state').value.trim(),
+    postal_code: $('pin').value.trim(),
+    country: $('country').value.trim() || 'India',
+    address_type: 'home',
+    is_default: true
+  };
+
+  if (!address.recipient_name || !address.phone || !address.address_line1 || !address.city || !address.state || !address.postal_code || !address.country) {
+    return alert('Please fill complete address.');
+  }
+
+  let addressId = savedAddress ? savedAddress.id : null;
+  try { addressId = await saveAddressIfNeeded(); } catch (e) { return alert(e.message); }
+
+  const buttons = document.querySelectorAll('button');
+  buttons.forEach(button => { if (button.textContent.includes('Pay & Place Order')) { button.disabled=true; button.textContent='Processing...'; } });
+
+  try {
+    const endpoint = isCartCheckout
+      ? '/api/orders/buy-cart/' + encodeURIComponent(currentUser.id)
+      : '/api/orders/buy/' + encodeURIComponent(currentUser.id);
+    const body = isCartCheckout
+      ? {address, address_id:addressId, payment_method:selectedPayment}
+      : {product_id:Number(pid), quantity:1, address, address_id:addressId, payment_method:selectedPayment};
+
+    const r = await fetch(endpoint, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const x = await r.json();
+    if (!r.ok) throw new Error(x.detail || 'Order failed');
+
+    alert(paymentLabel() + ' successful! Order placed: ' + x.order_number + '\nTransaction: ' + (x.transaction_id || 'DEMO'));
+    location.href='/orders.html';
+  } catch (e) {
+    alert(e.message || 'Unable to connect to server. Please try again.');
+    buttons.forEach(button => { if (button.textContent === 'Processing...') { button.disabled=false; button.textContent='Pay & Place Order'; } });
+  }
+}
+
+load();
+</script>
+
+</body>
+</html>
+

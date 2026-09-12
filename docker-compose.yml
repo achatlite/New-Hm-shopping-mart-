@@ -1,0 +1,48 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: hm-shopping-mart-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-hm_shopping_mart}
+      MYSQL_USER: ${MYSQL_USER:-Sidd}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-Sidd@123}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_password_change_me}
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+      - ./database/mysql-logging.cnf:/etc/mysql/conf.d/99-logging.cnf:ro
+      - ./logs/database:/var/log/mysql
+    healthcheck:
+      test: ["CMD","mysqladmin","ping","-h","localhost","-u","root","-proot_password_change_me"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+  backend:
+    build: ./backend
+    container_name: hm-shopping-mart-backend
+    restart: unless-stopped
+    environment:
+      DB_HOST: mysql
+      DB_PORT: "3306"
+      DB_NAME: ${MYSQL_DATABASE:-hm_shopping_mart}
+      DB_USER: ${MYSQL_USER:-Sidd}
+      DB_PASSWORD: ${MYSQL_PASSWORD:-Sidd@123}
+      LOG_DIR: /app/logs
+    depends_on:
+      mysql:
+        condition: service_healthy
+    volumes:
+      - ./logs/backend:/app/logs
+      - /etc/localtime:/etc/localtime:ro
+    ports: ["8000:8000"]
+  frontend:
+    build: ./frontend
+    container_name: hm-shopping-mart-frontend
+    restart: unless-stopped
+    depends_on: [backend]
+    volumes:
+      - ./logs/frontend:/var/log/nginx
+    ports: ["8080:80"]
+volumes:
+  mysql_data:

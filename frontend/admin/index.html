@@ -1,0 +1,1561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>HM Shopping Mart - Admin Login</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f5f7fb, #e9eef7);
+            color: #1f2937;
+        }
+
+        .page {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: #ffffff;
+            padding: 22px 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo {
+            width: 55px;
+            height: 55px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #2874f0, #1557c0);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 21px;
+            font-weight: 800;
+            box-shadow: 0 5px 15px rgba(40, 116, 240, 0.3);
+        }
+
+        .brand-text h1 {
+            font-size: 21px;
+            line-height: 1.1;
+            color: #111827;
+        }
+
+        .brand-text p {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+
+        .shop-smart {
+            font-weight: 700;
+            color: #2874f0;
+            font-size: 14px;
+        }
+
+        .main {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1.15fr 0.85fr;
+            gap: 50px;
+            max-width: 1250px;
+            width: 100%;
+            margin: auto;
+            padding: 55px 35px;
+            align-items: center;
+        }
+
+        .intro {
+            padding: 20px;
+        }
+
+        .intro-badge {
+            display: inline-block;
+            background: #e8f0ff;
+            color: #2874f0;
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 18px;
+        }
+
+        .intro h2 {
+            font-size: 43px;
+            line-height: 1.15;
+            color: #111827;
+            margin-bottom: 18px;
+        }
+
+        .intro h2 span {
+            color: #2874f0;
+        }
+
+        .intro-description {
+            color: #6b7280;
+            font-size: 17px;
+            line-height: 1.7;
+            max-width: 570px;
+            margin-bottom: 35px;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+        }
+
+        .feature {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.06);
+            display: flex;
+            gap: 14px;
+            align-items: flex-start;
+        }
+
+        .feature-icon {
+            width: 46px;
+            height: 46px;
+            flex-shrink: 0;
+            border-radius: 12px;
+            background: #edf4ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 23px;
+        }
+
+        .feature h3 {
+            font-size: 15px;
+            margin-bottom: 7px;
+            color: #111827;
+        }
+
+        .feature p {
+            color: #6b7280;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .login-area {
+            width: 100%;
+            max-width: 450px;
+            margin: auto;
+        }
+
+        .card {
+            background: #ffffff;
+            border-radius: 22px;
+            padding: 35px;
+            box-shadow: 0 15px 45px rgba(0, 0, 0, 0.10);
+        }
+
+        .card-header {
+            margin-bottom: 25px;
+        }
+
+        .card-header h2 {
+            font-size: 27px;
+            color: #111827;
+            margin-bottom: 8px;
+        }
+
+        .card-header p {
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 700;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+
+        .input-wrap {
+            position: relative;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 17px;
+            color: #6b7280;
+            pointer-events: none;
+        }
+
+        input {
+            width: 100%;
+            height: 48px;
+            border: 1px solid #d1d5db;
+            border-radius: 10px;
+            padding: 0 45px 0 43px;
+            outline: none;
+            font-size: 14px;
+            color: #111827;
+            background: #fff;
+            transition: 0.2s;
+        }
+
+        input:focus {
+            border-color: #2874f0;
+            box-shadow: 0 0 0 3px rgba(40, 116, 240, 0.10);
+        }
+
+        input::placeholder {
+            color: #9ca3af;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 13px;
+            top: 50%;
+            transform: translateY(-50%);
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-size: 18px;
+            color: #6b7280;
+            padding: 4px;
+        }
+
+        .password-toggle:hover {
+            color: #2874f0;
+        }
+
+        .form-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 8px 0 22px;
+        }
+
+        .remember {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 13px;
+            color: #4b5563;
+            cursor: pointer;
+        }
+
+        .remember input {
+            width: 15px;
+            height: 15px;
+            padding: 0;
+            margin: 0;
+            box-shadow: none;
+        }
+
+        .reset-link {
+            color: #2874f0;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .reset-link:hover {
+            text-decoration: underline;
+        }
+
+        .btn {
+            width: 100%;
+            height: 50px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #2874f0, #1557c0);
+            color: white;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: 0 7px 18px rgba(40, 116, 240, 0.25);
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 22px rgba(40, 116, 240, 0.30);
+        }
+
+        .btn:disabled {
+            opacity: 0.65;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 25px 0;
+            color: #9ca3af;
+            font-size: 12px;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: "";
+            height: 1px;
+            flex: 1;
+            background: #e5e7eb;
+        }
+
+        .create-admin-btn {
+            width: 100%;
+            height: 48px;
+            border: 1px solid #2874f0;
+            border-radius: 10px;
+            background: white;
+            color: #2874f0;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .create-admin-btn:hover {
+            background: #edf4ff;
+        }
+
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(17, 24, 39, 0.65);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            z-index: 1000;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-box {
+            width: 100%;
+            max-width: 500px;
+            max-height: 92vh;
+            overflow-y: auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 70px rgba(0, 0, 0, 0.25);
+            position: relative;
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 24px;
+        }
+
+        .modal-header h2 {
+            font-size: 24px;
+            color: #111827;
+            margin-bottom: 6px;
+        }
+
+        .modal-header p {
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        .close-btn {
+            border: none;
+            background: #f3f4f6;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            color: #4b5563;
+        }
+
+        .close-btn:hover {
+            background: #e5e7eb;
+        }
+
+        .create-form .form-group {
+            margin-bottom: 16px;
+        }
+
+        .create-form input {
+            height: 47px;
+        }
+
+        .create-admin-submit {
+            margin-top: 5px;
+        }
+
+        .cancel-btn {
+            width: 100%;
+            height: 46px;
+            margin-top: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 10px;
+            background: white;
+            color: #374151;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .cancel-btn:hover {
+            background: #f9fafb;
+        }
+
+        .message {
+            display: none;
+            padding: 11px 13px;
+            border-radius: 9px;
+            font-size: 13px;
+            line-height: 1.4;
+            margin-bottom: 17px;
+        }
+
+        .message.show {
+            display: block;
+        }
+
+        .message.success {
+            background: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+        }
+
+        .message.error {
+            background: #fef2f2;
+            color: #b91c1c;
+            border: 1px solid #fecaca;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 18px;
+            color: #9ca3af;
+            font-size: 12px;
+        }
+
+        @media (max-width: 900px) {
+            .main {
+                grid-template-columns: 1fr;
+                gap: 25px;
+                padding-top: 35px;
+            }
+
+            .intro {
+                text-align: center;
+            }
+
+            .intro-description {
+                margin-left: auto;
+                margin-right: auto;
+            }
+
+            .features {
+                text-align: left;
+            }
+
+            .login-area {
+                max-width: 500px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .header {
+                padding: 17px 18px;
+            }
+
+            .shop-smart {
+                display: none;
+            }
+
+            .main {
+                padding: 25px 15px;
+            }
+
+            .intro h2 {
+                font-size: 32px;
+            }
+
+            .features {
+                grid-template-columns: 1fr;
+            }
+
+            .card {
+                padding: 25px 20px;
+            }
+
+            .modal-box {
+                padding: 24px 18px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="page">
+
+    <header class="header">
+
+        <div class="brand">
+
+            <div class="logo">
+                HM
+            </div>
+
+            <div class="brand-text">
+                <h1>SHOPPING MART</h1>
+                <p>Great Products, Great Prices!</p>
+            </div>
+
+        </div>
+
+        <div class="shop-smart">
+            🛒 SHOP SMART
+        </div>
+
+    </header>
+
+
+    <main class="main">
+
+        <section class="intro">
+
+            <div class="intro-badge">
+                MANAGEMENT PORTAL
+            </div>
+
+            <h2>
+                Admin <span>Dashboard</span>
+            </h2>
+
+            <p class="intro-description">
+                Manage your store, products, orders and customers
+                from one powerful dashboard.
+            </p>
+
+            <div class="features">
+
+                <div class="feature">
+
+                    <div class="feature-icon">
+                        🛒
+                    </div>
+
+                    <div>
+                        <h3>Product Management</h3>
+                        <p>
+                            Add, update and manage your products
+                        </p>
+                    </div>
+
+                </div>
+
+
+                <div class="feature">
+
+                    <div class="feature-icon">
+                        📦
+                    </div>
+
+                    <div>
+                        <h3>Order Management</h3>
+                        <p>
+                            Track and manage customer orders
+                        </p>
+                    </div>
+
+                </div>
+
+
+                <div class="feature">
+
+                    <div class="feature-icon">
+                        👥
+                    </div>
+
+                    <div>
+                        <h3>Customer Management</h3>
+                        <p>
+                            View and manage your customers
+                        </p>
+                    </div>
+
+                </div>
+
+
+                <div class="feature">
+
+                    <div class="feature-icon">
+                        📊
+                    </div>
+
+                    <div>
+                        <h3>Sales Reports</h3>
+                        <p>
+                            Monitor sales and grow your business
+                        </p>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <section class="login-area">
+
+            <div class="card">
+
+                <div class="card-header">
+
+                    <h2>🛡️ Admin Login</h2>
+
+                    <p>
+                        Sign in to your admin account
+                    </p>
+
+                </div>
+
+
+                <div id="loginMessage" class="message"></div>
+
+
+                <form id="loginForm">
+
+                    <div class="form-group">
+
+                        <label for="loginIdentifier">
+                            Email / Mobile / Username
+                        </label>
+
+                        <div class="input-wrap">
+
+                            <span class="input-icon">
+                                👤
+                            </span>
+
+                            <input
+                                type="text"
+                                id="loginIdentifier"
+                                placeholder="Enter email, mobile or username"
+                                autocomplete="username"
+                                required
+                            >
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="loginPassword">
+                            Password
+                        </label>
+
+                        <div class="input-wrap">
+
+                            <span class="input-icon">
+                                🔒
+                            </span>
+
+                            <input
+                                type="password"
+                                id="loginPassword"
+                                placeholder="Enter password"
+                                autocomplete="current-password"
+                                required
+                            >
+
+                            <button
+                                type="button"
+                                class="password-toggle"
+                                onclick="togglePassword('loginPassword', this)"
+                                aria-label="Show password"
+                            >
+                                👁
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="form-options">
+
+                        <label class="remember">
+
+                            <input
+                                type="checkbox"
+                                id="rememberMe"
+                            >
+
+                            <span>Remember Me</span>
+
+                        </label>
+
+
+                        <a
+                            href="/admin/reset.html"
+                            class="reset-link"
+                        >
+                            🔑 Reset Password
+                        </a>
+
+                    </div>
+
+
+                    <button
+                        type="submit"
+                        class="btn"
+                        id="loginBtn"
+                    >
+                        ↪ &nbsp; Admin Login
+                    </button>
+
+                </form>
+
+
+                <div class="divider">
+                    OR
+                </div>
+
+
+                <button
+                    type="button"
+                    class="create-admin-btn"
+                    onclick="openCreateAdmin()"
+                >
+                    + Create Admin User
+                </button>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <footer class="footer">
+        © 2026 HM Shopping Mart. Admin Management Portal.
+    </footer>
+
+</div>
+
+
+<div
+    class="modal"
+    id="createAdminModal"
+    onclick="closeModalOutside(event)"
+>
+
+    <div
+        class="modal-box"
+        onclick="event.stopPropagation()"
+    >
+
+        <div class="modal-header">
+
+            <div>
+                <h2>Create Admin User</h2>
+
+                <p>
+                    Create a new admin account
+                </p>
+            </div>
+
+            <button
+                type="button"
+                class="close-btn"
+                onclick="closeCreateAdmin()"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+        <div
+            id="createMessage"
+            class="message"
+        ></div>
+
+
+        <form
+            id="createAdminForm"
+            class="create-form"
+        >
+
+            <div class="form-group">
+
+                <label for="adminName">
+                    Name
+                </label>
+
+                <div class="input-wrap">
+
+                    <span class="input-icon">
+                        👤
+                    </span>
+
+                    <input
+                        type="text"
+                        id="adminName"
+                        placeholder="Enter admin name"
+                        autocomplete="name"
+                        required
+                    >
+
+                </div>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="adminUsername">
+                    Admin Username
+                </label>
+
+                <div class="input-wrap">
+
+                    <span class="input-icon">
+                        👨‍💼
+                    </span>
+
+                    <input
+                        type="text"
+                        id="adminUsername"
+                        placeholder="Enter admin username"
+                        autocomplete="username"
+                        minlength="3"
+                        required
+                    >
+
+                </div>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="adminEmail">
+                    Email ID
+                </label>
+
+                <div class="input-wrap">
+
+                    <span class="input-icon">
+                        ✉
+                    </span>
+
+                    <input
+                        type="email"
+                        id="adminEmail"
+                        placeholder="Enter email address"
+                        autocomplete="email"
+                        required
+                    >
+
+                </div>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="adminPhone">
+                    Mobile Number
+                </label>
+
+                <div class="input-wrap">
+
+                    <span class="input-icon">
+                        📱
+                    </span>
+
+                    <input
+                        type="tel"
+                        id="adminPhone"
+                        placeholder="Enter mobile number"
+                        autocomplete="tel"
+                        inputmode="numeric"
+                        maxlength="15"
+                        required
+                    >
+
+                </div>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="adminPassword">
+                    Password
+                </label>
+
+                <div class="input-wrap">
+
+                    <span class="input-icon">
+                        🔒
+                    </span>
+
+                    <input
+                        type="password"
+                        id="adminPassword"
+                        placeholder="Enter password"
+                        autocomplete="new-password"
+                        required
+                    >
+
+                    <button
+                        type="button"
+                        class="password-toggle"
+                        onclick="togglePassword('adminPassword', this)"
+                        aria-label="Show password"
+                    >
+                        👁
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="adminConfirmPassword">
+                    Confirm Password
+                </label>
+
+                <div class="input-wrap">
+
+                    <span class="input-icon">
+                        🔒
+                    </span>
+
+                    <input
+                        type="password"
+                        id="adminConfirmPassword"
+                        placeholder="Confirm password"
+                        autocomplete="new-password"
+                        required
+                    >
+
+                    <button
+                        type="button"
+                        class="password-toggle"
+                        onclick="togglePassword('adminConfirmPassword', this)"
+                        aria-label="Show password"
+                    >
+                        👁
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <button
+                type="submit"
+                class="btn create-admin-submit"
+                id="createAdminBtn"
+            >
+                + Create Admin User
+            </button>
+
+
+            <button
+                type="button"
+                class="cancel-btn"
+                onclick="closeCreateAdmin()"
+            >
+                Cancel
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<script>
+
+    const API = 'http://localhost:8000/api';
+
+
+    function togglePassword(inputId, button) {
+
+        const input = document.getElementById(inputId);
+
+        if (input.type === 'password') {
+
+            input.type = 'text';
+
+            button.textContent = '🙈';
+
+            button.setAttribute(
+                'aria-label',
+                'Hide password'
+            );
+
+        } else {
+
+            input.type = 'password';
+
+            button.textContent = '👁';
+
+            button.setAttribute(
+                'aria-label',
+                'Show password'
+            );
+        }
+    }
+
+
+    function showMessage(elementId, message, type) {
+
+        const element =
+            document.getElementById(elementId);
+
+        element.textContent = message;
+
+        element.className =
+            'message show ' + type;
+    }
+
+
+    function hideMessage(elementId) {
+
+        const element =
+            document.getElementById(elementId);
+
+        element.className =
+            'message';
+    }
+
+
+    function openCreateAdmin() {
+
+        hideMessage('createMessage');
+
+        document
+            .getElementById('createAdminModal')
+            .classList
+            .add('show');
+
+        setTimeout(() => {
+
+            document
+                .getElementById('adminName')
+                .focus();
+
+        }, 100);
+    }
+
+
+    function closeCreateAdmin() {
+
+        document
+            .getElementById('createAdminModal')
+            .classList
+            .remove('show');
+
+        document
+            .getElementById('createAdminForm')
+            .reset();
+
+        hideMessage('createMessage');
+
+        resetPasswordInput('adminPassword');
+
+        resetPasswordInput('adminConfirmPassword');
+    }
+
+
+    function closeModalOutside(event) {
+
+        if (
+            event.target.id ===
+            'createAdminModal'
+        ) {
+            closeCreateAdmin();
+        }
+    }
+
+
+    function resetPasswordInput(inputId) {
+
+        const input =
+            document.getElementById(inputId);
+
+        input.type = 'password';
+
+        const button =
+            input.parentElement.querySelector(
+                '.password-toggle'
+            );
+
+        if (button) {
+            button.textContent = '👁';
+            button.setAttribute(
+                'aria-label',
+                'Show password'
+            );
+        }
+    }
+
+
+    document
+        .getElementById('loginForm')
+        .addEventListener(
+            'submit',
+            async function(event) {
+
+                event.preventDefault();
+
+                hideMessage('loginMessage');
+
+                const identifier =
+                    document
+                        .getElementById(
+                            'loginIdentifier'
+                        )
+                        .value
+                        .trim();
+
+                const password =
+                    document
+                        .getElementById(
+                            'loginPassword'
+                        )
+                        .value;
+
+                const remember =
+                    document
+                        .getElementById(
+                            'rememberMe'
+                        )
+                        .checked;
+
+                const button =
+                    document.getElementById(
+                        'loginBtn'
+                    );
+
+                button.disabled = true;
+
+                button.textContent =
+                    'Signing in...';
+
+                try {
+
+                    const response =
+                        await fetch(
+                            API + '/admin/login',
+                            {
+                                method: 'POST',
+
+                                headers: {
+                                    'Content-Type':
+                                        'application/json'
+                                },
+
+                                body: JSON.stringify({
+                                    identifier:
+                                        identifier,
+                                    password:
+                                        password
+                                })
+                            }
+                        );
+
+                    const data =
+                        await response.json();
+
+                    if (!response.ok) {
+
+                        throw new Error(
+                            data.detail ||
+                            data.message ||
+                            'Invalid admin credentials.'
+                        );
+                    }
+
+
+                    const storage = localStorage;
+
+                    storage.setItem(
+                        'hm_admin_identifier',
+                        identifier
+                    );
+
+                    storage.setItem(
+                        'hm_admin',
+                        JSON.stringify(data)
+                    );
+
+
+                    showMessage(
+                        'loginMessage',
+                        'Admin login successful. Redirecting...',
+                        'success'
+                    );
+
+
+                    setTimeout(() => {
+
+                        window.location.href =
+                            '/admin/dashboard.html';
+
+                    }, 700);
+
+                }
+
+                catch (error) {
+
+                    showMessage(
+                        'loginMessage',
+                        error.message ||
+                        'Unable to login.',
+                        'error'
+                    );
+
+                }
+
+                finally {
+
+                    button.disabled = false;
+
+                    button.textContent =
+                        '↪  Admin Login';
+                }
+
+            }
+        );
+
+
+    document
+        .getElementById('createAdminForm')
+        .addEventListener(
+            'submit',
+            async function(event) {
+
+                event.preventDefault();
+
+                hideMessage('createMessage');
+
+
+                const fullName =
+                    document
+                        .getElementById('adminName')
+                        .value
+                        .trim();
+
+
+                const username =
+                    document
+                        .getElementById('adminUsername')
+                        .value
+                        .trim();
+
+
+                const email =
+                    document
+                        .getElementById('adminEmail')
+                        .value
+                        .trim();
+
+
+                const phone =
+                    document
+                        .getElementById('adminPhone')
+                        .value
+                        .trim();
+
+
+                const password =
+                    document
+                        .getElementById('adminPassword')
+                        .value;
+
+
+                const confirmPassword =
+                    document
+                        .getElementById('adminConfirmPassword')
+                        .value;
+
+
+                if (!fullName) {
+
+                    showMessage(
+                        'createMessage',
+                        'Name is required.',
+                        'error'
+                    );
+
+                    return;
+                }
+
+
+                if (!username) {
+
+                    showMessage(
+                        'createMessage',
+                        'Admin username is required.',
+                        'error'
+                    );
+
+                    return;
+                }
+
+
+                if (username.length < 3) {
+
+                    showMessage(
+                        'createMessage',
+                        'Admin username must be at least 3 characters.',
+                        'error'
+                    );
+
+                    return;
+                }
+
+
+                if (!email) {
+
+                    showMessage(
+                        'createMessage',
+                        'Email ID is required.',
+                        'error'
+                    );
+
+                    return;
+                }
+
+
+                if (!phone) {
+
+                    showMessage(
+                        'createMessage',
+                        'Mobile number is required.',
+                        'error'
+                    );
+
+                    return;
+                }
+
+
+                if (password.length < 6) {
+
+                    showMessage(
+                        'createMessage',
+                        'Password must be at least 6 characters.',
+                        'error'
+                    );
+
+                    return;
+                }
+
+
+                if (
+                    password !==
+                    confirmPassword
+                ) {
+
+                    showMessage(
+                        'createMessage',
+                        'Password and Confirm Password do not match.',
+                        'error'
+                    );
+
+                    return;
+                }
+
+
+                const button =
+                    document.getElementById(
+                        'createAdminBtn'
+                    );
+
+                button.disabled = true;
+
+                button.textContent =
+                    'Creating Admin...';
+
+
+                try {
+
+                    const response =
+                        await fetch(
+                            API + '/admin/create',
+                            {
+                                method: 'POST',
+
+                                headers: {
+                                    'Content-Type':
+                                        'application/json'
+                                },
+
+                                body: JSON.stringify({
+
+                                    full_name:
+                                        fullName,
+
+                                    username:
+                                        username,
+
+                                    email:
+                                        email,
+
+                                    phone:
+                                        phone,
+
+                                    password:
+                                        password
+
+                                })
+                            }
+                        );
+
+
+                    const data =
+                        await response.json();
+
+
+                    if (!response.ok) {
+
+                        throw new Error(
+                            data.detail ||
+                            data.message ||
+                            'Unable to create admin account.'
+                        );
+                    }
+
+
+                    showMessage(
+                        'createMessage',
+                        'Admin account created successfully!',
+                        'success'
+                    );
+
+
+                    document
+                        .getElementById(
+                            'createAdminForm'
+                        )
+                        .reset();
+
+
+                    resetPasswordInput(
+                        'adminPassword'
+                    );
+
+                    resetPasswordInput(
+                        'adminConfirmPassword'
+                    );
+
+
+                    setTimeout(() => {
+
+                        closeCreateAdmin();
+
+                        document
+                            .getElementById(
+                                'loginIdentifier'
+                            )
+                            .value =
+                            username;
+
+                    }, 1200);
+
+                }
+
+                catch (error) {
+
+                    showMessage(
+                        'createMessage',
+                        error.message ||
+                        'Unable to create admin account.',
+                        'error'
+                    );
+
+                }
+
+                finally {
+
+                    button.disabled = false;
+
+                    button.textContent =
+                        '+ Create Admin User';
+
+                }
+
+            }
+        );
+
+
+    document.addEventListener(
+        'keydown',
+        function(event) {
+
+            if (event.key === 'Escape') {
+
+                const modal =
+                    document.getElementById(
+                        'createAdminModal'
+                    );
+
+                if (
+                    modal.classList.contains('show')
+                ) {
+
+                    closeCreateAdmin();
+
+                }
+
+            }
+
+        }
+    );
+
+</script>
+
+</body>
+</html>

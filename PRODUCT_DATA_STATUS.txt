@@ -1,0 +1,15 @@
+HM Shopping Mart - Product Preservation Notes
+
+1. The current 7-product catalog is preserved:
+   - Men's Running Shoes (MRS-001) - current product kept because existing orders reference product ID 1.
+   - Wireless Bluetooth Earbuds (HM-AUD-001)
+   - Smart LED TV 43 Inch (HM-TV-001)
+   - Men's Casual Cotton Shirt (HM-MF-001)
+   - Women's Handbag (HM-BAG-001)
+   - Stainless Steel Water Bottle (HM-HK-001)
+   - Gaming Keyboard & Mouse Combo (HM-GM-001)
+
+2. Existing users, admin, orders, payments, shipments and return/account flows are not reset by this package.
+3. Existing password reset/account creation flows are unchanged.
+4. Add Product now supports Product Image URL + preview and sends image_url to the existing product_images backend storage.
+5. Do NOT run: docker compose down -v
