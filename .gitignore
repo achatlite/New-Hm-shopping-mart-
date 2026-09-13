@@ -1,25 +1,33 @@
-# Secrets / local environment
-.env
-.env.*
-!.env.example
-*.pem
-*.key
-
-# Runtime logs and local Kubernetes data
-logs/*
-!logs/.gitkeep
-k8s/mysql-data/
-
 # Python
 __pycache__/
 *.py[cod]
-.pytest_cache/
+*.pyo
 .venv/
+venv/
+.env
+.env.*
 
-# Jenkins local data
-jenkins/jenkins_home/
+# Logs
+logs/
+*.log
+*.zip
 
-# OS/editor
+# MySQL runtime/data
+k8s/mysql-data/
+k8s-data/
+
+# MySQL generated files
+*.ibd
+*.frm
+*.MYD
+*.MYI
+*.cnf
+
+# OS / IDE
 .DS_Store
 .vscode/
 .idea/
+
+# Kubernetes secrets / local generated files
+*.key
+*.pem
