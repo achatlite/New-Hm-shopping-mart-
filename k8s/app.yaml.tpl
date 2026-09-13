@@ -80,17 +80,24 @@ spec:
             - containerPort: 3306
           readinessProbe:
             exec:
-              command: ["sh", "-c", "mysqladmin ping -h 127.0.0.1 -u root -p\"__MYSQL_ROOT_PASSWORD__\" --silent"]
+              command:
+                - sh
+                - -c
+                - mysqladmin ping -h 127.0.0.1 -u root -p"$${MYSQL_ROOT_PASSWORD}" --silent
             initialDelaySeconds: 20
             periodSeconds: 10
             timeoutSeconds: 5
             failureThreshold: 6
           livenessProbe:
             exec:
-              command: ["sh", "-c", "mysqladmin ping -h 127.0.0.1 -u root -p\"__MYSQL_ROOT_PASSWORD__\" --silent"]
+              command:
+                - sh
+                - -c
+                - mysqladmin ping -h 127.0.0.1 -u root -p"$${MYSQL_ROOT_PASSWORD}" --silent
             initialDelaySeconds: 300
             periodSeconds: 20
             timeoutSeconds: 5
+            failureThreshold: 3
           volumeMounts:
             - name: data
               mountPath: /var/lib/mysql
